@@ -698,7 +698,7 @@ const PROJECTS = [
   images:[
     '1.png',
     '2.png',
-    '3.png',
+    '3.png'
     ]
   },
 
@@ -732,7 +732,7 @@ const PROJECTS = [
     color:    '#00160e',
     accent:   '#1dc49a',
     type:'video',
-    video: 'atemporal.mov',
+    video: 'atemporal.mp4',
   },
 
   // ── PROYECTO 9 ──────────────────────────────────────────────────────────
@@ -1094,7 +1094,22 @@ function _cracks(o,cx,cy,r){
   o.style.opacity='1';
   setTimeout(()=>{o.style.transition='opacity .9s ease-out .2s'; o.style.opacity='0';},40);
 }
+  
+PROJECTS.forEach(proj => {
 
+  if(proj.images){
+
+    proj.images.forEach(src => {
+
+      const img = new Image();
+
+      img.src = src;
+
+    });
+
+  }
+
+});
 // ── SPHERE DRAW ─────────────────────────────────────────
 function drawSphere(ctx,proj,t){
   const S=256,cx=128,cy=128,r=116;
