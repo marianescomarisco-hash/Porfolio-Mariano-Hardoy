@@ -31,6 +31,54 @@ body{background:#000;font-family:'Syne',sans-serif;cursor:none;-webkit-font-smoo
 .video-bg canvas{width:100%;height:100%;display:block;}
 .video-bg .vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 5%,rgba(0,0,0,.95) 100%);}
 
+.carousel-modal{
+  position:relative;
+  width:100%;
+  height:100%;
+}
+
+.carousel-modal img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+
+.carousel-modal button{
+  position:absolute;
+  top:50%;
+  transform:translateY(-50%);
+  z-index:10;
+
+  width:48px;
+  height:48px;
+
+  border:none;
+  border-radius:50%;
+
+  background:rgba(0,0,0,.5);
+  color:white;
+  font-size:28px;
+  cursor:pointer;
+}
+
+#prevImg{
+  left:20px;
+}
+
+#nextImg{
+  right:20px;
+  
+}
+
+#carouselImg{
+  transition:
+    opacity .35s ease,
+    transform .35s ease;
+}
+
+
+
 /* ── HEADER ── */
 header{position:fixed;top:0;left:0;right:0;z-index:300;padding:0 48px;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.55);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:.5px solid rgba(255,255,255,.08);}
 
@@ -186,6 +234,30 @@ nav.desk{display:flex;gap:10px;}
 @media(min-width:560px){
   .serv-carousel-ui{ display:none !important; }
   .serv-card{ opacity:1 !important; pointer-events:all !important; position:relative !important; }
+}
+
+.carousel-modal button{
+
+  opacity:0;
+
+  transition:
+    opacity .3s ease,
+    transform .3s ease;
+
+}
+
+.carousel-modal:hover button{
+
+  opacity:1;
+
+}
+
+.carousel-modal button:hover{
+
+  transform:
+    translateY(-50%)
+    scale(1.08);
+
 }
 
 /* carousel controls */
@@ -577,7 +649,7 @@ const PROJECTS = [
     desc:     'Proyecto de Animación Stop Motion. Miniaturas, sets hechos a mano y edición digital para dar vida a una carrera caótica y divertida.', // ← Descripción en el modal
     color:    '#100a1f',                     // ← Color de fondo de la esfera
     accent:   '#7c6af7',                     // ← Color de brillo / acento
-    hasVideo: true,                          // ← true = reproducir video real
+    type:'video',                          // ← true = reproducir video real
     video:    'minicarrera.mp4', // ← Reemplazá con tu URL o ruta local
   },
 
@@ -588,7 +660,7 @@ const PROJECTS = [
     desc:     'Video documental sobre el proceso creativo de un chef. Filmación, dirección y edición para contar la historia detrás del plato.',
     color:    '#071a12',
     accent:   '#2dd49a',
-    hasVideo: true,                         // ← false = placeholder animado
+    type:'video',
     video: 'cocinando.mp4',           // ← Descomentá y completá cuando tengas el video
   },
 
@@ -599,86 +671,91 @@ const PROJECTS = [
     desc:     'En este proyecto, diseñé una serie de alfombras inspiradas en patrones geométricos y colores vibrantes. Cada pieza es una exploración de textura y forma, creada para transformar espacios con su presencia única.',
     color:    '#1a0808',
     accent:   '#e05555',
-    hasVideo: true,
+    type:'video',
     video: 'ferrutuff.mp4',
   },
 
   // ── PROYECTO 4 ──────────────────────────────────────────────────────────
   {
-    title:    'Órbita 04',
-    tag:      '04 — Branding',
+    title:    'Parque Nahuel Huapi',
+    tag:      '04 — Animación 2D',
     desc:     'Sistema de identidad para estudio de arquitectura. Tipografía y movimiento como lenguaje.',
     color:    '#07101a',
     accent:   '#5a9ae0',
-    hasVideo: true,
-    video: 'animacion.gif',
+    type:'video',
+    video: 'parquenahuel.mp4',
   },
 
   // ── PROYECTO 5 ──────────────────────────────────────────────────────────
   {
-    title:    'Ruido 05',
-    tag:      '05 — Experimental',
-    desc:     'Texturas de ruido animado. Exploración de lo orgánico a través de lo digital.',
+    title:    'Infografía Ajedrez',
+    tag:      '05 — Proyecto de Figma',
+    desc:     'junto con un compañero, diseñamos una infografía interactiva sobre la historia del ajedrez. El proyecto incluyó investigación, diseño de interfaz y prototipado en Figma, con un enfoque en la experiencia del usuario y la presentación visual de datos complejos.',
     color:    '#181200',
     accent:   '#d4a02d',
-    hasVideo: false,
-    // video: 'videos/ruido.mp4',
+    type:'carousel',
+
+  images:[
+    '1.png',
+    '2.png',
+    '3.png',
+    ]
   },
 
   // ── PROYECTO 6 ──────────────────────────────────────────────────────────
   {
-    title:    'Vacío 06',
-    tag:      '06 — Arte digital',
-    desc:     'Serie de piezas sobre el espacio negativo. Minimalismo radical.',
+    title:    'Mucho Mejor',
+    tag:      'Video Musical — Dirección',
+    desc:     'un video musical grabado al aire libre.',
     color:    '#0c0c0c',
     accent:   '#cccccc',
-    hasVideo: false,
-    // video: 'videos/vacio.mp4',
+    type:'video',
+    video: 'muchomejor.mp4',
   },
 
   // ── PROYECTO 7 ──────────────────────────────────────────────────────────
   {
-    title:    'Masa 07',
-    tag:      '07 — 3D / Render',
-    desc:     'Objetos imposibles en espacios imposibles. Render fotorrealista.',
+    title:    'Vereda',
+    tag:      '07 — 3D / VideoClip Musical',
+    desc:     '2 jovenes unidos por la musica, superando las dificultades de la juventud en los 90s de argentina.',
     color:    '#10071a',
     accent:   '#b06af7',
-    hasVideo: false,
-    // video: 'videos/masa.mp4',
+    type:'video',
+    video: 'vereda.mp4',
   },
 
   // ── PROYECTO 8 ──────────────────────────────────────────────────────────
   {
-    title:    'Flujo 08',
-    tag:      '08 — Dirección',
-    desc:     'Dirección de arte para campaña audiovisual. Concepto, storyboard y ejecución.',
+    title:    'Atemporal',
+    tag:      '08 — Dirección Audiovisual',
+    desc:     'Jorge no lo sabe, pero esta atrapado entre el pasado y el futuro y vive su vida en el limbo.',
     color:    '#00160e',
     accent:   '#1dc49a',
-    hasVideo: false,
-    // video: 'videos/flujo.mp4',
+    type:'video',
+    video: 'atemporal.mov',
   },
 
   // ── PROYECTO 9 ──────────────────────────────────────────────────────────
-  {
-    title:    'Tensión 09',
-    tag:      '09 — Tipografía',
-    desc:     'Tipografía cinética. Letras que se deforman bajo presión conceptual.',
-    color:    '#1a0505',
-    accent:   '#f75a5a',
-    hasVideo: false,
+  //{
+    //title:    'Tensión 09',
+   // tag:      '09 — Tipografía',
+   // desc:     'Tipografía cinética. Letras que se deforman bajo presión conceptual.',
+   // color:    '#1a0505',
+  //  accent:   '#f75a5a',
+  //  type:'video',
     // video: 'videos/tension.mp4',
-  },
+  //},
 
   // ── PROYECTO 10 ─────────────────────────────────────────────────────────
-  {
-    title:    'Umbral 10',
-    tag:      '10 — Síntesis',
-    desc:     'Pieza síntesis del año. Todo el lenguaje visual del estudio en un solo loop.',
-    color:    '#06091a',
-    accent:   '#5a7af7',
-    hasVideo: false,
-    // video: 'videos/umbral.mp4',
-  },
+ // {
+ //   title:    'Umbral 10',
+  //  tag:      '10 — Síntesis',
+  //  desc:     'Pieza síntesis del año. Todo el lenguaje visual del estudio en un solo loop.',
+  //  color:    '#06091a',
+  //  accent:   '#5a7af7',
+ //   type:'video',
+//   // video: 'videos/umbral.mp4',
+  //},
 
   // ── ➕ PLANTILLA PARA NUEVO PROYECTO ────────────────────────────────────
   // Para agregar un proyecto nuevo, copiá este bloque, descomentalo
@@ -1202,12 +1279,75 @@ function openProj(i,el){
   const vWrap=document.getElementById('modalVideoWrap');
   vWrap.innerHTML='';
 
-  if(proj.hasVideo && proj.video){
-    const vid=document.createElement('video');
-    vid.src=proj.video; vid.autoplay=true; vid.loop=true; vid.muted=true; vid.playsInline=true;
-    vid.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
-    vWrap.appendChild(vid);
-  } else {
+ if(proj.type === 'video'){
+
+  const vid=document.createElement('video');
+  vid.src=proj.video;
+  vid.autoplay=true;
+  vid.loop=true;
+  vid.muted=true;
+  vid.playsInline=true;
+  vid.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+  vWrap.appendChild(vid);
+
+}
+else if(proj.type === 'carousel'){
+
+  let current = 0;
+
+  vWrap.innerHTML = `
+    <div class="carousel-modal">
+      <button id="prevImg">‹</button>
+      <img id="carouselImg" src="${proj.images[0]}">
+      <button id="nextImg">›</button>
+    </div>
+  `;
+
+  const img = document.getElementById('carouselImg');
+
+document.getElementById('nextImg').onclick = ()=>{
+
+  img.style.opacity = '0';
+  img.style.transform = 'scale(.98)';
+
+  setTimeout(()=>{
+
+    current = (current + 1) % proj.images.length;
+    img.src = proj.images[current];
+
+    img.onload = ()=>{
+
+      img.style.opacity = '1';
+      img.style.transform = 'scale(1)';
+
+    };
+
+  },150);
+
+};
+document.getElementById('prevImg').onclick = ()=>{
+
+  img.style.opacity = '0';
+  img.style.transform = 'scale(.98)';
+
+  setTimeout(()=>{
+
+    current = (current + 1) % proj.images.length;
+    img.src = proj.images[current];
+
+    img.onload = ()=>{
+
+      img.style.opacity = '1';
+      img.style.transform = 'scale(1)';
+
+    };
+
+  },150);
+
+};
+
+}
+else{
     // animated placeholder
     const mc=document.createElement('canvas');
     mc.style.cssText='width:100%;height:100%;display:block;';
