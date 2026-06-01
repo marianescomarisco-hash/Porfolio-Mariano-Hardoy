@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qi Studio — Portfolio Visual</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400&display=swap');
+
+/* ── RESET & BASE ── */
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;}
+body{background:#000;font-family:'Syne',sans-serif;cursor:none;-webkit-font-smoothing:antialiased;color:#ffffff;}
+
+/* ── CURSOR ── */
+.cursor{position:fixed;width:9px;height:9px;background:#fff;border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);mix-blend-mode:difference;transition:width .12s,height .12s;}
+.cursor-ring{position:fixed;width:32px;height:32px;border:1px solid rgba(255,0,255,.28);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);}
+.cursor.hover{width:18px;height:18px;}
+
+/* ── MOUSE TRAIL ── */
+#trail-canvas{position:fixed;inset:0;z-index:9990;pointer-events:none;}
+
+/* ── GRID ── */
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.016) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.016) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0;}
+/* 30% darkness overlay */
+.bg-dark{position:fixed;inset:0;background:rgba(0,0,0,.3);pointer-events:none;z-index:2;}
+
+/* ── VIDEO BG ── */
+.video-bg{position:fixed;inset:0;z-index:1;opacity:0;transition:opacity 1.4s ease;}
+.video-bg.active{opacity:1;}
+.video-bg canvas{width:100%;height:100%;display:block;}
+.video-bg .vignette{position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 5%,rgba(0,0,0,.95) 100%);}
+
+/* ── HEADER ── */
+header{position:fixed;top:0;left:0;right:0;z-index:300;padding:0 48px;height:64px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.55);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:.5px solid rgba(255,255,255,.08);}
+
+.logo-wrap{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.logo-img{height:32px;width:auto;filter:brightness(1) invert(0);opacity:.9;}
+.logo-text{font-family:'DM Mono',monospace;font-size:11px;font-weight:300;letter-spacing:.22em;color:rgba(255,255,255,.5);text-transform:uppercase;}
+
+/* desktop nav */
+nav.desk{display:flex;gap:10px;}
+@media(max-width:768px){nav.desk{display:none;}}
+
+/* ── GLASS BUTTON (shared) ── */
+.glass-btn{position:relative;padding:9px 22px;font-family:'Syne',sans-serif;font-size:12px;font-weight:400;letter-spacing:.12em;color:rgba(255,255,255,.82);text-transform:uppercase;cursor:none;border:none;background:transparent;outline:none;transform-style:preserve-3d;-webkit-font-smoothing:antialiased;}
+.glass-btn .bb{position:absolute;inset:0;border-radius:40px;background:rgba(255,255,255,.05);border:.5px solid rgba(255,255,255,.14);overflow:hidden;transition:border-color .3s,background .3s;}
+.glass-btn .bsh{position:absolute;inset:0;border-radius:40px;opacity:0;transition:opacity .3s;pointer-events:none;}
+.glass-btn .brim{position:absolute;top:0;left:10%;right:10%;height:1px;border-radius:50%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.32),transparent);opacity:.6;}
+.glass-btn .bt{position:relative;z-index:2;}
+.glass-btn:hover .bb{border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.09);}
+.glass-btn:hover .bsh{opacity:1;}
+.glass-btn:hover{color:#fff;}
+.glass-btn .sc{position:absolute;inset:0;pointer-events:none;z-index:10;overflow:visible;}
+.glass-btn .co{position:absolute;inset:0;border-radius:40px;pointer-events:none;z-index:8;overflow:hidden;}
+.shard{position:absolute;animation:shardFly var(--dur) var(--delay) cubic-bezier(.2,.6,.3,1) forwards;opacity:0;}
+@keyframes shardFly{
+  0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1);}
+  15%{opacity:1;}
+  100%{opacity:0;transform:translate(var(--tx),var(--ty)) rotate(var(--rot)) scale(0);}
+}
+
+/* ── BURGER (mobile) ── */
+.burger-wrap{display:none;position:relative;}
+@media(max-width:768px){.burger-wrap{display:flex;align-items:center;}}
+.burger-btn{position:relative;width:48px;height:40px;cursor:none;border:none;background:transparent;outline:none;}
+.burger-btn .bb{position:absolute;inset:0;border-radius:12px;background:rgba(255,255,255,.05);border:.5px solid rgba(255,255,255,.14);}
+.burger-btn .bsh{position:absolute;inset:0;border-radius:12px;opacity:0;pointer-events:none;}
+.burger-btn .brim{position:absolute;top:0;left:15%;right:15%;height:1px;border-radius:50%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);}
+.burger-lines{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;height:100%;}
+.burger-lines span{display:block;width:20px;height:1.2px;background:rgba(255,255,255,.8);border-radius:2px;transition:transform .3s,opacity .3s;}
+.burger-btn.open .burger-lines span:nth-child(1){transform:translateY(6.2px) rotate(45deg);}
+.burger-btn.open .burger-lines span:nth-child(2){opacity:0;}
+.burger-btn.open .burger-lines span:nth-child(3){transform:translateY(-6.2px) rotate(-45deg);}
+
+/* mobile menu overlay */
+.mobile-menu{position:fixed;inset:0;z-index:250;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:rgba(0,0,0,.75);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);opacity:0;pointer-events:none;transition:opacity .4s ease;}
+.mobile-menu.open{opacity:1;pointer-events:all;}
+.mobile-menu .glass-btn{font-size:18px;padding:14px 40px;letter-spacing:.14em;}
+
+/* ── PAGES (snap scroll) ── */
+.pages{width:100%;height:100vh;overflow-y:scroll;scroll-snap-type:y mandatory;scrollbar-width:none;}
+.pages::-webkit-scrollbar{display:none;}
+.page{height:100vh;scroll-snap-align:start;position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:64px;}
+
+/* ── HERO ── */
+.hero-tag{font-family:'DM Mono',monospace;font-size:11px;font-weight:300;letter-spacing:.28em;color:rgba(255,255,255,.55);text-transform:uppercase;margin-bottom:28px;}
+.hero-title{font-family:'Syne',sans-serif;font-size:clamp(44px,6.5vw,88px);font-weight:800;line-height:.92;color:rgba(255,255,255,.95);letter-spacing:-.03em;text-align:center;margin-bottom:28px;}
+.hero-title em{font-style:normal;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.4);}
+.hero-sub{font-family:'DM Mono',monospace;font-size:13px;font-weight:300;color:rgba(255,255,255,.55);letter-spacing:.06em;text-align:center;line-height:1.9;}
+
+/* ── SERVICIOS ── */
+#servicios{ background:rgba(0,0,0,.3); }
+
+/* ── Desktop grid (≥ 560px): 3×2, unchanged ── */
+.serv-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:14px;
+  width:100%;
+  max-width:1100px;
+}
+
+.serv-card{
+  position:relative;
+  border-radius:18px;
+  background:rgba(255,255,255,.04);
+  border:.5px solid rgba(255,255,255,.1);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  padding:28px 26px 26px;
+  overflow:hidden;
+  transition:background .35s, border-color .35s, transform .3s;
+  cursor:none;
+}
+.serv-card::before{
+  content:'';position:absolute;top:0;left:12%;right:12%;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);
+}
+.serv-card:hover{
+  background:rgba(255,255,255,.07);
+  border-color:rgba(255,255,255,.22);
+  transform:translateY(-3px);
+}
+.serv-card .card-shine{
+  position:absolute;inset:0;border-radius:18px;opacity:0;pointer-events:none;
+  transition:opacity .3s;
+}
+.serv-card:hover .card-shine{ opacity:1; }
+
+.serv-icon{
+  font-size:20px;color:rgba(255,255,255,.28);
+  margin-bottom:14px;display:block;line-height:1;
+}
+.serv-title{
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  color:#ffffff;letter-spacing:-.01em;margin-bottom:10px;line-height:1.15;
+}
+.serv-desc{
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:300;
+  color:rgba(255,255,255,.62);line-height:1.85;letter-spacing:.02em;
+}
+
+/* ── Mobile carousel (< 560px only) ── */
+@media(max-width:559px){
+  #servicios{
+    padding:80px 0 32px !important;
+    overflow:hidden !important;
+  }
+  #servicios .serv-section-header{
+    padding:0 24px;
+  }
+  .serv-grid{
+    display:block !important;
+    position:relative !important;
+    max-width:none !important;
+    width:100% !important;
+    /* fixed height so cards stack without layout shift */
+    min-height:260px;
+    margin-bottom:12px;
+  }
+  .serv-card{
+    /* all cards stacked on top of each other */
+    position:absolute !important;
+    top:0; left:24px;
+    width:calc(100vw - 48px) !important;
+    transform:none !important;
+    /* crossfade transition — no movement, just opacity */
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .5s ease !important;
+    /* prevent hover lift on mobile */
+  }
+  .serv-card:hover{
+    transform:none !important;
+  }
+  .serv-card.sc-active{
+    opacity:1 !important;
+    pointer-events:all !important;
+    position:absolute !important;
+  }
+  .serv-carousel-ui{
+    display:flex !important;
+  }
+}
+@media(min-width:560px){
+  .serv-carousel-ui{ display:none !important; }
+  .serv-card{ opacity:1 !important; pointer-events:all !important; position:relative !important; }
+}
+
+/* carousel controls */
+.serv-carousel-ui{
+  display:none;
+  align-items:center;
+  justify-content:center;
+  gap:20px;
+  margin-top:20px;
+  padding:0 24px;
+}
+.serv-arrow{
+  position:relative;
+  width:40px; height:40px;
+  border-radius:50%;
+  background:rgba(255,255,255,.04);
+  border:.5px solid rgba(255,255,255,.14);
+  cursor:none;
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px; color:rgba(255,255,255,.7);
+  transition:background .25s, border-color .25s;
+  -webkit-tap-highlight-color:transparent;
+}
+.serv-arrow:hover{ background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.3); color:#fff; }
+.serv-dots{
+  display:flex; gap:7px; align-items:center;
+}
+.serv-dot{
+  width:5px; height:5px; border-radius:50%;
+  background:rgba(255,255,255,.2);
+  transition:background .3s, transform .3s;
+}
+.serv-dot.active{
+  background:#ffffff;
+  transform:scale(1.4);
+}
+
+/* ── PROYECTOS ── */
+#proyectos{overflow:hidden;padding-top:64px;}
+.section-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.28em;color:rgba(255,255,255,.4);text-transform:uppercase;margin-bottom:10px;flex-shrink:0;}
+.proj-title-wrap{margin-bottom:14px;flex-shrink:0;}
+.proj-title-wrap h2{font-family:'Syne',sans-serif;font-size:clamp(36px,5vw,64px);font-weight:800;letter-spacing:-.04em;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.3);transition:-webkit-text-stroke .25s,filter .25s;line-height:1;text-align:center;}
+.carousel-wrapper{position:relative;flex:1;width:100%;min-height:0;}
+.sphere-track{position:absolute;inset:0;transform-style:preserve-3d;}
+.sphere{position:absolute;border-radius:50%;cursor:none;will-change:transform;}
+.sphere canvas{position:absolute;inset:0;border-radius:50%;width:100%;height:100%;display:block;}
+.sphere .s-label{position:absolute;bottom:-24px;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.18em;color:rgba(255,255,255,.55);white-space:nowrap;text-transform:uppercase;opacity:0;transition:opacity .4s;}
+.sphere.is-front .s-label{opacity:1;}
+.drag-hint{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,.3);letter-spacing:.18em;text-transform:uppercase;margin-top:8px;flex-shrink:0;}
+
+/* ── SOBRE MI ── */
+.about-tag{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.25em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:28px;}
+.about-name{font-family:'Syne',sans-serif;font-size:clamp(36px,5.5vw,68px);font-weight:800;color:rgba(255,255,255,.92);letter-spacing:-.03em;margin-bottom:22px;text-align:center;}
+.about-bio{font-family:'DM Mono',monospace;font-size:14px;color:rgba(255,255,255,.80);line-height:1.6;letter-spacing:.03em;text-align:center;padding:0 8%;max-width:800px;}
+
+/* profile photo */
+.about-photo-wrap{
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:28px;
+}
+.about-photo-glass{
+  position:relative;
+  width:120px; height:120px;
+  border-radius:50%;
+  background:rgba(255,255,255,.04);
+  border:.5px solid rgba(255,255,255,.18);
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.06), 0 8px 32px rgba(0,0,0,.5);
+}
+/* top rim highlight */
+.about-photo-glass::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;height:1px;z-index:2;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);
+}
+/* subtle inner glow ring */
+.about-photo-glass::after{
+  content:'';position:absolute;inset:0;border-radius:50%;z-index:2;
+  background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.08) 0%, transparent 65%);
+  pointer-events:none;
+}
+.about-photo-img{
+  width:100%;height:100%;
+  object-fit:cover;
+  border-radius:50%;
+  display:block;
+  position:relative;z-index:1;
+}
+.about-photo-placeholder{
+  position:absolute;inset:0;display:flex;
+  align-items:center;justify-content:center;
+  border-radius:50%;
+}
+/* hide placeholder when image loads */
+.about-photo-img + .about-photo-placeholder{ display:none; }
+/* show placeholder when no-img */
+.about-photo-glass.no-img .about-photo-img{ display:none !important; }
+.about-photo-glass.no-img .about-photo-placeholder{ display:flex; }
+
+/* ── FOOTER ── */
+footer{height:100vh;scroll-snap-align:start;position:relative;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:48px;padding-top:64px;}
+.footer-glass{width:min(560px,90vw);border-radius:24px;background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.1);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:40px 48px;display:flex;flex-direction:column;align-items:center;gap:28px;position:relative;overflow:hidden;}
+.footer-glass::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);}
+.footer-logo{height:28px;opacity:.4;filter:invert(0);}
+.footer-tagline{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.22em;color:rgba(255,255,255,.3);text-transform:uppercase;text-align:center;}
+.footer-socials{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
+.social-link{position:relative;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.18em;color:rgba(255,255,255,.5);text-decoration:none;text-transform:uppercase;padding:8px 16px;cursor:none;transition:color .25s;}
+.social-link .sb{position:absolute;inset:0;border-radius:30px;background:rgba(255,255,255,.03);border:.5px solid rgba(255,255,255,.08);transition:border-color .3s,background .3s;}
+.social-link .ssh{position:absolute;inset:0;border-radius:30px;opacity:0;transition:opacity .3s;pointer-events:none;}
+.social-link span{position:relative;z-index:1;}
+.social-link:hover .sb{border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.06);}
+.social-link:hover .ssh{opacity:1;}
+.social-link:hover{color:rgba(255,255,255,.9);}
+.footer-copy{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;color:rgba(255,255,255,.18);text-transform:uppercase;}
+
+/* ── MODAL ── */
+.modal{position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0);pointer-events:none;transition:background .5s;padding:40px 20px;}
+.modal.open{background:rgba(0,0,0,.94);pointer-events:all;}
+.modal-inner{transform:scale(.85);opacity:0;transition:transform .5s cubic-bezier(.34,1.4,.64,1),opacity .4s;width:min(88vw,1000px);max-height:90vh;border-radius:12px;overflow-y:auto;border:.5px solid rgba(255,255,255,.1);position:relative;z-index:1;background:#0a0a0a;scrollbar-width:none;}
+.modal-inner::-webkit-scrollbar{display:none;}
+.modal.open .modal-inner{transform:scale(1);opacity:1;}
+.modal-video-wrap{width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:12px 12px 0 0;}
+.modal-video-wrap video{width:100%;height:100%;object-fit:cover;display:block;}
+.modal-video-wrap canvas{width:100%;height:100%;display:block;}
+.modal-content{padding:36px 40px 40px;background:rgba(0,0,0,.6);}
+.modal-proj-tag{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.25em;color:rgba(255,255,255,.45);text-transform:uppercase;margin-bottom:14px;}
+.modal-proj-title{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,52px);font-weight:800;color:rgba(255,255,255,.95);letter-spacing:-.03em;margin-bottom:20px;line-height:1.05;}
+.modal-proj-desc{font-family:'DM Mono',monospace;font-size:13px;color:rgba(255,255,255,.62);line-height:2;letter-spacing:.025em;}
+.modal-hint{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;color:rgba(255,255,255,.2);text-transform:uppercase;text-align:center;padding:16px;border-top:.5px solid rgba(255,255,255,.06);}
+
+/* ── FRAG ── */
+.frag-container{position:fixed;inset:0;z-index:400;pointer-events:none;overflow:hidden;}
+.frag-piece{position:absolute;animation:fragOut var(--fd) var(--fdelay) cubic-bezier(.15,.5,.3,1) both;}
+@keyframes fragOut{
+  0%{opacity:1;transform:translate(0,0) rotate(0deg) scale(1);}
+  8%{opacity:1;}
+  100%{opacity:0;transform:translate(var(--ftx),var(--fty)) rotate(var(--frot)) scale(0);}
+}
+
+@media(max-width:768px){
+  header{padding:0 20px;}
+  .modal-content{padding:24px 24px 28px;}
+  .footer-glass{padding:32px 28px;}
+  .manif-text{font-size:clamp(18px,5vw,32px) !important;}
+}
+
+/* ── MANIFIESTO ── */
+.manif-line{
+  display:flex;align-items:baseline;justify-content:center;gap:14px;
+  padding:16px 0;border-bottom:.5px solid rgba(255,255,255,.05);
+  opacity:0;transform:translateY(14px);
+  transition:opacity .65s ease,transform .65s ease;
+}
+.manif-line.visible{opacity:1;transform:translateY(0);}
+.manif-line:last-child{border-bottom:none;}
+.manif-num{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;color:rgba(255,255,255,.22);min-width:22px;text-align:right;flex-shrink:0;padding-top:6px;}
+.manif-text{font-family:'Syne',sans-serif;font-size:clamp(20px,3.2vw,40px);font-weight:800;letter-spacing:-.03em;color:rgba(255,255,255,.88);text-align:left;line-height:1.05;}
+.manif-text em{font-style:normal;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.35);}
+</style>
+</head>
+<body>
+
+<!-- TRAIL CANVAS -->
+<canvas id="trail-canvas"></canvas>
+
+<!-- CURSOR -->
+<div class="cursor" id="cur"></div>
+<div class="cursor-ring" id="curR"></div>
+
+<div class="bg-grid"></div>
+<div class="bg-dark"></div>
+
+<!-- VIDEO BGs -->
+<div id="vbg0" class="video-bg active"><canvas></canvas><div class="vignette"></div></div>
+<div id="vbg1" class="video-bg"><canvas></canvas><div class="vignette"></div></div>
+
+<!-- HEADER -->
+<header>
+  <a class="logo-wrap" href="#" onclick="goTo('hero');return false;">
+    <img class="logo-img" src="logofinal.png" alt="Qi Studio Logo">
+    <span class="logo-text">Studio</span>
+  </a>
+  <nav class="desk" id="deskNav">
+    <button class="glass-btn" id="btnServicios"><div class="bb"><div class="brim"></div><div class="bsh"></div></div><div class="sc"></div><div class="co"></div><span class="bt">Servicios</span></button>
+    <button class="glass-btn" id="btnProyectos"><div class="bb"><div class="brim"></div><div class="bsh"></div></div><div class="sc"></div><div class="co"></div><span class="bt">Proyectos</span></button>
+    <button class="glass-btn" id="btnSobre"><div class="bb"><div class="brim"></div><div class="bsh"></div></div><div class="sc"></div><div class="co"></div><span class="bt">Sobre mí</span></button>
+  </nav>
+  <!-- BURGER -->
+  <div class="burger-wrap">
+    <button class="burger-btn" id="burgerBtn">
+      <div class="bb"></div><div class="bsh"></div>
+      <div class="burger-lines"><span></span><span></span><span></span></div>
+    </button>
+  </div>
+</header>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="glass-btn" id="mServicios"><div class="bb"><div class="brim"></div><div class="bsh"></div></div><div class="sc"></div><div class="co"></div><span class="bt">Servicios</span></button>
+  <button class="glass-btn" id="mProyectos"><div class="bb"><div class="brim"></div><div class="bsh"></div></div><div class="sc"></div><div class="co"></div><span class="bt">Proyectos</span></button>
+  <button class="glass-btn" id="mSobre"><div class="bb"><div class="brim"></div><div class="bsh"></div></div><div class="sc"></div><div class="co"></div><span class="bt">Sobre mí</span></button>
+</div>
+
+<!-- PAGES -->
+<div class="pages" id="pages">
+
+  <!-- HERO -->
+  <div class="page" id="hero">
+    <p class="hero-tag">Portfolio· Mariano Hardoy</p>
+    <h1 class="hero-title"><em>El</em> Diseño<br><em>es el </em>Idioma<br><em>sin </em>Palabras.</h1>
+    <p class="hero-sub">Scroll para explorar.</p>
+  </div>
+
+  <!-- SERVICIOS -->
+  <div class="page" id="servicios" style="flex-direction:column;padding:80px 48px 40px;overflow:hidden;">
+    <div class="serv-section-header" style="width:100%;max-width:1100px;text-align:center;">
+      <p class="section-label" style="margin-bottom:18px;">02 — Servicios</p>
+      <h2 style="font-family:'Syne',sans-serif;font-size:clamp(28px,3.8vw,52px);font-weight:800;color:#ffffff;letter-spacing:-.03em;text-align:center;margin-bottom:40px;line-height:1;">Lo que <em style="font-style:normal;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.4);">construimos</em></h2>
+    </div>
+    <div class="serv-grid" id="servGrid">
+      <div class="serv-card sc-active">
+        <div class="serv-icon">◈</div>
+        <h3 class="serv-title">Diseño Multimedial</h3>
+        <p class="serv-desc">Dirección de arte e identidad visual para marcas, eventos y proyectos que necesitan un lenguaje propio. Desde el concepto hasta la pieza final.</p>
+      </div>
+      <div class="serv-card">
+        <div class="serv-icon">◎</div>
+        <h3 class="serv-title">Motion Graphics</h3>
+        <p class="serv-desc">Animación y diseño en movimiento para piezas digitales, campañas audiovisuales y contenido que vive en pantalla. El movimiento como mensaje.</p>
+      </div>
+      <div class="serv-card">
+        <div class="serv-icon">⬡</div>
+        <h3 class="serv-title">Contenido Digital</h3>
+        <p class="serv-desc">Producción de contenido visual para plataformas digitales. Reels, formatos sociales y piezas pensadas para capturar atención en el primer segundo.</p>
+      </div>
+      <div class="serv-card">
+        <div class="serv-icon">◉</div>
+        <h3 class="serv-title">Videos Musicales</h3>
+        <p class="serv-desc">Dirección y producción audiovisual para artistas. Concepto, estética y narrativa al servicio de la música. Cada track merece su imagen.</p>
+      </div>
+      <div class="serv-card">
+        <div class="serv-icon">⟁</div>
+        <h3 class="serv-title">VJ & Performance Visual</h3>
+        <p class="serv-desc">Visuales en tiempo real para shows en vivo, festivales y eventos. Sincronización de imagen y sonido en el espacio.</p>
+      </div>
+      <div class="serv-card">
+        <div class="serv-icon">⬕</div>
+        <h3 class="serv-title">Diseño Web</h3>
+        <p class="serv-desc">Sitios y experiencias digitales donde el diseño y la interacción hablan el mismo idioma. Interfaces que se sienten, no solo se ven.</p>
+      </div>
+    </div>
+    <!-- mobile carousel controls — hidden on desktop via CSS -->
+    <div class="serv-carousel-ui" id="servCarouselUI">
+      <button class="serv-arrow" id="servPrev">&#8592;</button>
+      <div class="serv-dots" id="servDots"></div>
+      <button class="serv-arrow" id="servNext">&#8594;</button>
+    </div>
+  </div>
+
+  <!-- PROYECTOS -->
+  <div class="page" id="proyectos" style="flex-direction:column;padding-bottom:8px;">
+    <p class="section-label">03 — Proyectos</p>
+    <div class="proj-title-wrap"><h2 id="projH2">PROYECTOS</h2></div>
+    <div class="carousel-wrapper" id="carouselWrapper">
+      <div class="sphere-track" id="sphereTrack"></div>
+    </div>
+    <p class="drag-hint">← arrastrar o scroll para girar · click para abrir →</p>
+  </div>
+
+  <!-- SOBRE MI -->
+  <div class="page" id="sobre-mi" style="text-align:center;">
+    <p class="about-tag">04 — Sobre mí — Argentina</p>
+
+     
+    <h2 class="about-name">Mariano<br>Hardoy</h2>
+    <p class="about-bio">Diseñador Multimedia / Director Creativo. <br><br>Enfocado en identidad visual, motion graphics y experiencias digitales. Creo proyectos donde la estética, el movimiento y la interacción trabajan como un solo lenguaje.</p>
+  </div>
+
+  <!-- MANIFIESTO (flavor section, not in nav) -->
+  <div class="page" id="manifiesto" style="overflow:hidden;">
+    <canvas id="manifCanvas" style="position:absolute;inset:0;width:100%;height:100%;opacity:.4;pointer-events:none;"></canvas>
+    <div style="position:relative;z-index:2;max-width:780px;padding:40px 32px;text-align:center;">
+      <p style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.32em;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:44px;">// Sistema de creencias</p>
+      <div id="manifestoLines"></div>
+      <div style="margin-top:52px;display:flex;align-items:center;justify-content:center;gap:16px;">
+        <div style="flex:1;height:.5px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.1));"></div>
+        <p style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;color:rgba(255,255,255,.18);text-transform:uppercase;white-space:nowrap;">Qi Studio · MMXXV</p>
+        <div style="flex:1;height:.5px;background:linear-gradient(90deg,rgba(255,255,255,.1),transparent);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER PAGE -->
+  <footer>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;">
+      <p style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.22em;color:rgba(255,255,255,.2);text-transform:uppercase;">05 — Contacto</p>
+      <h2 style="font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,52px);font-weight:800;color:rgba(255,255,255,.85);letter-spacing:-.03em;text-align:center;line-height:1.1;">¿Trabajamos<br><em style="font-style:normal;color:transparent;-webkit-text-stroke:1px rgba(255,255,255,.35);">juntos?</em></h2>
+    </div>
+    <div class="footer-glass">
+      <img class="footer-logo" src="logofinal.png" alt="Qi Studio">
+      <p class="footer-tagline">Qi Studio · Diseño visual & dirección creativa</p>
+      <div class="footer-socials">
+        <a href="https://www.instagram.com/hardoymariano/" target="_blank" class="social-link"><div class="sb"></div><div class="ssh"></div><span>Instagram</span></a>
+        <a href="https://www.behance.net/marianohardoy1" target="_blank" class="social-link"><div class="sb"></div><div class="ssh"></div><span>Behance</span></a>
+        <a href="https://linkedin.com" target="_blank" class="social-link"><div class="sb"></div><div class="ssh"></div><span>LinkedIn</span></a>
+        <a href="mailto:mariano_hardoy.20@hotmail.com" class="social-link"><div class="sb"></div><div class="ssh"></div><span>Email</span></a>
+      </div>
+      <p class="footer-copy">© 2025 Qi Studio — Todos los derechos reservados</p>
+    </div>
+  </footer>
+
+</div><!-- /pages -->
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+  <div class="modal-inner" id="modalInner">
+    <div class="modal-video-wrap" id="modalVideoWrap"></div>
+    <div class="modal-content">
+      <p class="modal-proj-tag" id="modalTag"></p>
+      <h2 class="modal-proj-title" id="modalTitle"></h2>
+      <p class="modal-proj-desc" id="modalDesc"></p>
+    </div>
+    <div class="modal-hint">click fuera para cerrar</div>
+  </div>
+</div>
+
+<!-- FRAG -->
+<div class="frag-container" id="fragContainer"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// ✏️  PROYECTOS — GUÍA DE EDICIÓN
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// Cada objeto en este array es un proyecto que aparece como esfera
+// en el carrusel 3D. Para agregar, eliminar o editar proyectos,
+// simplemente modificá los valores dentro de cada { }.
+//
+// CAMPOS DISPONIBLES:
+// ─────────────────────────────────────────────────────────────────────────
+//  title     → Nombre del proyecto. Aparece en la burbuja y en el modal.
+//              Ejemplo: 'Nombre del Proyecto'
+//
+//  tag       → Categoría/número. Aparece pequeño arriba del título en el modal.
+//              Formato sugerido: '01 — Categoría'
+//
+//  desc      → Descripción larga del proyecto. Aparece debajo del título
+//              en el modal al hacer click en la esfera. Puede ser un párrafo.
+//
+//  color     → Color de fondo oscuro de la esfera y del modal.
+//              Usá un hex oscuro que refleje la paleta del proyecto.
+//              Ejemplo: '#0d0820' (violeta muy oscuro)
+//
+//  accent    → Color de acento para el brillo interior de la esfera
+//              y las partículas de fragmentación. Usá el color dominante
+//              de la pieza. Ejemplo: '#7c6af7' (violeta), '#e05555' (rojo)
+//
+//  hasVideo  → ¿Tiene video real para reproducir en el modal?
+//              true  → mostrará el video del campo `video`
+//              false → muestra un fondo animado generativo como placeholder
+//
+//  video     → URL o ruta del archivo de video. Solo se usa si hasVideo:true
+//              Opciones:
+//                · URL directa:  'https://mi-servidor.com/videos/proyecto.mp4'
+//                · Archivo local (mismo directorio): 'videos/proyecto.mp4'
+//              Formatos recomendados: .mp4 (H.264), .webm
+//              ⚠️  Si no tenés video todavía, dejá hasVideo:false
+//
+// ─────────────────────────────────────────────────────────────────────────
+// AGREGAR UN PROYECTO:
+//   Copiá cualquier línea, pegala al final antes del ]; y completá los campos.
+//   El carrusel se ajusta automáticamente al número de proyectos.
+//
+// ELIMINAR UN PROYECTO:
+//   Borrá la línea completa del proyecto (asegurate de que la coma
+//   del proyecto anterior quede correcta).
+//
+// CAMBIAR EL ORDEN:
+//   Reorganizá las líneas — el orden aquí es el orden en el carrusel.
+// ═══════════════════════════════════════════════════════════════════════════
+
+const PROJECTS = [
+
+  // ── PROYECTO 1 ──────────────────────────────────────────────────────────
+  {
+    title:    'Mini Carrera Mortal',                    // ← Nombre visible en la burbuja
+    tag:      '01 — StopMotion',     // ← Categoría en el modal
+    desc:     'Proyecto de Animación Stop Motion. Miniaturas, sets hechos a mano y edición digital para dar vida a una carrera caótica y divertida.', // ← Descripción en el modal
+    color:    '#100a1f',                     // ← Color de fondo de la esfera
+    accent:   '#7c6af7',                     // ← Color de brillo / acento
+    hasVideo: true,                          // ← true = reproducir video real
+    video:    'minicarrera.mp4', // ← Reemplazá con tu URL o ruta local
+  },
+
+  // ── PROYECTO 2 ──────────────────────────────────────────────────────────
+  {
+    title:    'Bio Pic',
+    tag:      '02 — Producción Audiovisual',
+    desc:     'Video documental sobre el proceso creativo de un chef. Filmación, dirección y edición para contar la historia detrás del plato.',
+    color:    '#071a12',
+    accent:   '#2dd49a',
+    hasVideo: true,                         // ← false = placeholder animado
+    video: 'cocinando.mp4',           // ← Descomentá y completá cuando tengas el video
+  },
+
+  // ── PROYECTO 3 ──────────────────────────────────────────────────────────
+  {
+    title:    'Ferru Tuff',
+    tag:      '03 — Diseño de Alfombras',
+    desc:     'En este proyecto, diseñé una serie de alfombras inspiradas en patrones geométricos y colores vibrantes. Cada pieza es una exploración de textura y forma, creada para transformar espacios con su presencia única.',
+    color:    '#1a0808',
+    accent:   '#e05555',
+    hasVideo: true,
+    video: 'ferrutuff.mp4',
+  },
+
+  // ── PROYECTO 4 ──────────────────────────────────────────────────────────
+  {
+    title:    'Órbita 04',
+    tag:      '04 — Branding',
+    desc:     'Sistema de identidad para estudio de arquitectura. Tipografía y movimiento como lenguaje.',
+    color:    '#07101a',
+    accent:   '#5a9ae0',
+    hasVideo: true,
+    video: 'animacion.gif',
+  },
+
+  // ── PROYECTO 5 ──────────────────────────────────────────────────────────
+  {
+    title:    'Ruido 05',
+    tag:      '05 — Experimental',
+    desc:     'Texturas de ruido animado. Exploración de lo orgánico a través de lo digital.',
+    color:    '#181200',
+    accent:   '#d4a02d',
+    hasVideo: false,
+    // video: 'videos/ruido.mp4',
+  },
+
+  // ── PROYECTO 6 ──────────────────────────────────────────────────────────
+  {
+    title:    'Vacío 06',
+    tag:      '06 — Arte digital',
+    desc:     'Serie de piezas sobre el espacio negativo. Minimalismo radical.',
+    color:    '#0c0c0c',
+    accent:   '#cccccc',
+    hasVideo: false,
+    // video: 'videos/vacio.mp4',
+  },
+
+  // ── PROYECTO 7 ──────────────────────────────────────────────────────────
+  {
+    title:    'Masa 07',
+    tag:      '07 — 3D / Render',
+    desc:     'Objetos imposibles en espacios imposibles. Render fotorrealista.',
+    color:    '#10071a',
+    accent:   '#b06af7',
+    hasVideo: false,
+    // video: 'videos/masa.mp4',
+  },
+
+  // ── PROYECTO 8 ──────────────────────────────────────────────────────────
+  {
+    title:    'Flujo 08',
+    tag:      '08 — Dirección',
+    desc:     'Dirección de arte para campaña audiovisual. Concepto, storyboard y ejecución.',
+    color:    '#00160e',
+    accent:   '#1dc49a',
+    hasVideo: false,
+    // video: 'videos/flujo.mp4',
+  },
+
+  // ── PROYECTO 9 ──────────────────────────────────────────────────────────
+  {
+    title:    'Tensión 09',
+    tag:      '09 — Tipografía',
+    desc:     'Tipografía cinética. Letras que se deforman bajo presión conceptual.',
+    color:    '#1a0505',
+    accent:   '#f75a5a',
+    hasVideo: false,
+    // video: 'videos/tension.mp4',
+  },
+
+  // ── PROYECTO 10 ─────────────────────────────────────────────────────────
+  {
+    title:    'Umbral 10',
+    tag:      '10 — Síntesis',
+    desc:     'Pieza síntesis del año. Todo el lenguaje visual del estudio en un solo loop.',
+    color:    '#06091a',
+    accent:   '#5a7af7',
+    hasVideo: false,
+    // video: 'videos/umbral.mp4',
+  },
+
+  // ── ➕ PLANTILLA PARA NUEVO PROYECTO ────────────────────────────────────
+  // Para agregar un proyecto nuevo, copiá este bloque, descomentalo
+  // (quitá los // del inicio de cada línea) y completá los valores:
+  //
+  // {
+  //   title:    'Nombre del Proyecto',
+  //   tag:      '11 — Categoría',
+  //   desc:     'Descripción del proyecto. Qué es, qué rol tuviste, qué lo hace especial.',
+  //   color:    '#0a0a0a',   // hex oscuro
+  //   accent:   '#ffffff',   // color dominante de la pieza
+  //   hasVideo: true,
+  //   video:    'videos/mi-proyecto.mp4',
+  // },
+
+];
+
+const N = PROJECTS.length;
+const M = Math;
+
+// ── CURSOR & TRAIL ──────────────────────────────────────
+const cur = document.getElementById('cur');
+const curR = document.getElementById('curR');
+const trailCanvas = document.getElementById('trail-canvas');
+const tCtx = trailCanvas.getContext('2d');
+let mx = 400, my = 300, rx = 400, ry = 300;
+
+function resizeTrail(){trailCanvas.width=window.innerWidth;trailCanvas.height=window.innerHeight;}
+resizeTrail();
+window.addEventListener('resize',resizeTrail);
+
+document.addEventListener('mousemove', e=>{
+  mx=e.clientX; my=e.clientY;
+  cur.style.left=mx+'px'; cur.style.top=my+'px';
+  addDot(mx, my);
+});
+
+// Particle trail — each dot lives 500ms then fades
+const DOTS = [];
+const DOT_LIFE = 200; // ms
+
+function addDot(x, y){
+  DOTS.push({ x, y, born: Date.now(), vx:(Math.random()-.5)*.4, vy:(Math.random()-.5)*.4 });
+  if(DOTS.length > 1200) DOTS.shift();
+}
+
+function drawTrail(){
+  const now = Date.now();
+  tCtx.clearRect(0,0,trailCanvas.width,trailCanvas.height);
+
+  // prune dead dots
+  while(DOTS.length && now - DOTS[0].born > DOT_LIFE) DOTS.shift();
+  if(DOTS.length < 22) return;
+
+  // draw smooth catmull-rom curve through recent dots
+  // split into segments by age for multi-layer effect
+  for(let pass=0;pass<2;pass++){
+    const isGlow = pass===0;
+    tCtx.beginPath();
+    tCtx.moveTo(DOTS[0].x, DOTS[0].y);
+    for(let i=1;i<DOTS.length;i++){
+      const d = DOTS[i], dp = DOTS[i-1];
+      const cpx = (dp.x+d.x)/2, cpy = (dp.y+d.y)/2;
+      tCtx.quadraticCurveTo(dp.x,dp.y,cpx,cpy);
+    }
+    // use per-segment alpha so tail fades with age
+    // instead draw segments individually for age-based fade
+    tCtx.closePath();
+  }
+
+  // Per-segment draw with age fade
+  for(let i=1;i<DOTS.length;i++){
+    const d = DOTS[i], dp = DOTS[i-1];
+    const age = (now - d.born) / DOT_LIFE;     // 0=fresh 1=dead
+    const prog = i / DOTS.length;               // 0=oldest 1=newest
+    const alpha = (1-age) * prog * prog;
+    if(alpha < 0.004) continue;
+
+    const cpx = (dp.x+d.x)/2, cpy = (dp.y+d.y)/2;
+
+    // glow pass
+    tCtx.beginPath();
+    tCtx.moveTo(dp.x,dp.y);
+    tCtx.quadraticCurveTo(dp.x,dp.y,cpx,cpy);
+    tCtx.strokeStyle = `rgba(200,185,255,${alpha*0.28})`;
+    tCtx.lineWidth = 7;
+    tCtx.lineCap = 'round';
+    tCtx.lineJoin = 'round';
+    tCtx.stroke();
+
+    // core pass
+    tCtx.beginPath();
+    tCtx.moveTo(dp.x,dp.y);
+    tCtx.quadraticCurveTo(dp.x,dp.y,cpx,cpy);
+    tCtx.strokeStyle = `rgba(255,255,255,${alpha*0.55})`;
+    tCtx.lineWidth = 1.5;
+    tCtx.stroke();
+  }
+
+  // Tiny sparkle dots at freshest positions
+  for(let i=Math.max(0,DOTS.length-8);i<DOTS.length;i++){
+    const d=DOTS[i];
+    const age=(now-d.born)/DOT_LIFE;
+    const a=(1-age)*(i/DOTS.length);
+    if(a<0.01)continue;
+    tCtx.beginPath();
+    tCtx.arc(d.x,d.y,1.2,0,Math.PI*2);
+    tCtx.fillStyle=`rgba(255,255,255,${a*0.7})`;
+    tCtx.fill();
+  }
+}
+
+(function animCursor(){
+  rx+=(mx-rx)*.1; ry+=(my-ry)*.1;
+  curR.style.left=rx+'px'; curR.style.top=ry+'px';
+  drawTrail();
+  requestAnimationFrame(animCursor);
+})();
+
+// ── NAV ─────────────────────────────────────────────────
+function goTo(id){
+  document.getElementById(id)?.scrollIntoView({behavior:'smooth'});
+  closeMobileMenu();
+}
+document.getElementById('btnServicios').addEventListener('click',()=>goTo('servicios'));
+document.getElementById('btnProyectos').addEventListener('click',()=>goTo('proyectos'));
+document.getElementById('btnSobre').addEventListener('click',()=>goTo('sobre-mi'));
+document.getElementById('mServicios').addEventListener('click',()=>goTo('servicios'));
+document.getElementById('mProyectos').addEventListener('click',()=>goTo('proyectos'));
+document.getElementById('mSobre').addEventListener('click',()=>goTo('sobre-mi'));
+
+// ── BURGER ──────────────────────────────────────────────
+const burgerBtn = document.getElementById('burgerBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+let menuOpen = false;
+
+burgerBtn.addEventListener('mousemove',e=>{
+  const r=burgerBtn.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+  burgerBtn.querySelector('.bsh').style.background=`radial-gradient(circle at ${x/r.width*100}% ${y/r.height*100}%,rgba(255,255,255,.18) 0%,transparent 70%)`;
+  burgerBtn.querySelector('.bsh').style.opacity='1';
+});
+burgerBtn.addEventListener('mouseleave',()=>{burgerBtn.querySelector('.bsh').style.opacity='0';});
+burgerBtn.addEventListener('click',()=>{
+  menuOpen=!menuOpen;
+  burgerBtn.classList.toggle('open',menuOpen);
+  mobileMenu.classList.toggle('open',menuOpen);
+});
+function closeMobileMenu(){menuOpen=false;burgerBtn.classList.remove('open');mobileMenu.classList.remove('open');}
+mobileMenu.addEventListener('click',e=>{if(e.target===mobileMenu)closeMobileMenu();});
+
+// ── GLASS BTN INTERACTIONS ───────────────────────────────
+document.querySelectorAll('.glass-btn').forEach(btn=>initGlassBtn(btn));
+function initGlassBtn(btn){
+  const bsh=btn.querySelector('.bsh'),bb=btn.querySelector('.bb'),sc=btn.querySelector('.sc'),co=btn.querySelector('.co');
+  if(!bsh||!bb)return;
+  let broken=false,rt=null;
+  btn.addEventListener('mousemove',e=>{
+    if(broken)return;
+    const r=btn.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    const dx=(x-r.width/2)/(r.width/2),dy=(y-r.height/2)/(r.height/2);
+    btn.style.transform=`perspective(300px) rotateX(${-dy*10}deg) rotateY(${dx*10}deg) scale(1.04)`;
+    btn.style.transition='transform .05s';
+    bsh.style.background=`radial-gradient(circle at ${x/r.width*100}% ${y/r.height*100}%,rgba(255,255,255,.18) 0%,rgba(255,255,255,.06) 45%,transparent 70%)`;
+    bsh.style.opacity='1';
+    cur.classList.add('hover');
+  });
+  btn.addEventListener('mouseleave',()=>{
+    if(broken)return;
+    btn.style.transform='perspective(300px) rotateX(0) rotateY(0) scale(1)';
+    btn.style.transition='transform .4s ease-out';
+    bsh.style.opacity='0';
+    cur.classList.remove('hover');
+  });
+  btn.addEventListener('click',e=>{
+    if(broken||!sc||!co)return; broken=true;
+    const r=btn.getBoundingClientRect();
+    _shards(sc,e.clientX-r.left,e.clientY-r.top,r);
+    _cracks(co,e.clientX-r.left,e.clientY-r.top,r);
+    bb.style.background='rgba(255,255,255,.01)'; btn.style.color='rgba(255,255,255,.2)';
+    clearTimeout(rt);
+    rt=setTimeout(()=>{
+      btn.style.color='rgba(255,255,255,.82)'; bb.style.background='rgba(255,255,255,.05)';
+      sc.innerHTML=''; co.innerHTML=''; co.style.opacity='0'; broken=false;
+    },1600);
+  });
+}
+
+// social links hover
+document.querySelectorAll('.social-link').forEach(el=>{
+  const ssh=el.querySelector('.ssh');
+  el.addEventListener('mousemove',e=>{
+    const r=el.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    ssh.style.background=`radial-gradient(circle at ${x/r.width*100}% ${y/r.height*100}%,rgba(255,255,255,.14) 0%,transparent 70%)`;
+    ssh.style.opacity='1'; cur.classList.add('hover');
+  });
+  el.addEventListener('mouseleave',()=>{ssh.style.opacity='0'; cur.classList.remove('hover');});
+});
+
+// ── SERVICE CARD SHINE ───────────────────────────────────
+document.querySelectorAll('.serv-card').forEach(card=>{
+  const shine = document.createElement('div');
+  shine.classList.add('card-shine');
+  card.appendChild(shine);
+  card.addEventListener('mousemove',e=>{
+    const r=card.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top;
+    shine.style.background=`radial-gradient(circle at ${x/r.width*100}% ${y/r.height*100}%,rgba(255,255,255,.1) 0%,rgba(255,255,255,.04) 40%,transparent 70%)`;
+    cur.classList.add('hover');
+  });
+  card.addEventListener('mouseleave',()=>{ cur.classList.remove('hover'); });
+});
+
+// ── MOBILE SERVICES CAROUSEL (only active below 560px) ──
+(function(){
+  const cards   = Array.from(document.querySelectorAll('.serv-card'));
+  const dotsEl  = document.getElementById('servDots');
+  const prevBtn = document.getElementById('servPrev');
+  const nextBtn = document.getElementById('servNext');
+  const TOTAL   = cards.length;
+  let current   = 0;
+  let autoTimer = null;
+  let isMobile  = false;
+
+  // build dots
+  cards.forEach((_,i)=>{
+    const d = document.createElement('div');
+    d.classList.add('serv-dot');
+    if(i===0) d.classList.add('active');
+    dotsEl.appendChild(d);
+  });
+  const dots = Array.from(dotsEl.querySelectorAll('.serv-dot'));
+
+  function isMobileView(){ return window.innerWidth < 560; }
+
+  function goTo(idx){
+    if(!isMobileView()) return;
+    cards[current].classList.remove('sc-active');
+    dots[current].classList.remove('active');
+    current = (idx + TOTAL) % TOTAL;
+    cards[current].classList.add('sc-active');
+    dots[current].classList.add('active');
+    // sync grid min-height to active card so wrapper doesn't collapse
+    const grid = document.getElementById('servGrid');
+    if(grid) grid.style.minHeight = cards[current].offsetHeight + 'px';
+  }
+
+  function startAuto(){
+    clearInterval(autoTimer);
+    autoTimer = setInterval(()=>{ if(isMobileView()) goTo(current+1); }, 8000);
+  }
+
+  function resetAuto(){ startAuto(); }
+
+  prevBtn?.addEventListener('click',()=>{ goTo(current-1); resetAuto(); });
+  nextBtn?.addEventListener('click',()=>{ goTo(current+1); resetAuto(); });
+
+  // touch swipe on the grid
+  const grid = document.getElementById('servGrid');
+  let tsX = 0;
+  grid?.addEventListener('touchstart',e=>{ tsX=e.touches[0].clientX; },{passive:true});
+  grid?.addEventListener('touchend',e=>{
+    if(!isMobileView()) return;
+    const dx = e.changedTouches[0].clientX - tsX;
+    if(Math.abs(dx)>40){ goTo(dx<0 ? current+1 : current-1); resetAuto(); }
+  },{passive:true});
+
+  // on resize: reset to desktop state or re-init mobile
+  function onResize(){
+    if(isMobileView()){
+      if(!isMobile){
+        isMobile=true;
+        cards.forEach((c,i)=>{ c.classList.toggle('sc-active', i===current); });
+        // set grid height to avoid collapse
+        const grid = document.getElementById('servGrid');
+        if(grid && cards[current]) grid.style.minHeight = cards[current].offsetHeight + 'px';
+        startAuto();
+      }
+    } else {
+      if(isMobile){
+        isMobile=false;
+        clearInterval(autoTimer);
+        const grid = document.getElementById('servGrid');
+        if(grid) grid.style.minHeight = '';
+        cards.forEach(c=>c.classList.add('sc-active'));
+      }
+    }
+  }
+  window.addEventListener('resize', onResize);
+  onResize(); // run once on load
+})();
+
+// ── SHARD / CRACK HELPERS ───────────────────────────────
+function _shards(c,cx,cy,r){
+  c.innerHTML='';
+  const count = 24;
+  for(let i=0;i<count;i++){
+    const s=document.createElement('div'); s.classList.add('shard');
+    const w=4+M.random()*22, h=3+M.random()*14;
+    const a=M.random()*360, d=50+M.random()*180;
+    const tx=M.cos(a*M.PI/180)*d, ty=M.sin(a*M.PI/180)*d - 30;
+    const shapes=['polygon(50% 0%,100% 100%,0% 100%)','polygon(20% 0%,80% 10%,100% 80%,10% 100%)','polygon(0% 20%,60% 0%,100% 40%,80% 100%,20% 100%)'];
+    s.style.cssText=`
+      left:${cx-w/2+(M.random()-.5)*r.width*.6}px;
+      top:${cy-h/2+(M.random()-.5)*r.height*.6}px;
+      width:${w}px; height:${h}px;
+      background:rgba(255,255,255,${.1+M.random()*.25});
+      border:.5px solid rgba(255,255,255,${.3+M.random()*.4});
+      clip-path:${shapes[M.floor(M.random()*shapes.length)]};
+      --tx:${tx}px; --ty:${ty}px;
+      --rot:${(M.random()-.5)*900}deg;
+      --dur:${.5+M.random()*.6}s;
+      --delay:${M.random()*.1}s;
+    `;
+    c.appendChild(s);
+  }
+}
+function _cracks(o,cx,cy,r){
+  const w=r.width,h=r.height; let l=[];
+  const branches=7+M.floor(M.random()*4);
+  for(let i=0;i<branches;i++){
+    const a=(i/branches)*M.PI*2+M.random()*.6;
+    const len=w*.3+M.random()*w*.25;
+    const ex=cx+M.cos(a)*len, ey=cy+M.sin(a)*len;
+    const mx2=cx+M.cos(a)*len*.5+(M.random()-.5)*10, my2=cy+M.sin(a)*len*.5+(M.random()-.5)*10;
+    l.push(`<path d="M${cx},${cy} Q${mx2},${my2} ${ex},${ey}" stroke="rgba(255,255,255,.6)" stroke-width=".8" fill="none"/>`);
+    if(M.random()>.35){
+      const ba=a+(M.random()-.5)*1.3, bl=len*.35;
+      const bx=mx2+M.cos(ba)*bl, by2=my2+M.sin(ba)*bl;
+      l.push(`<path d="M${mx2},${my2} L${bx},${by2}" stroke="rgba(255,255,255,.3)" stroke-width=".5" fill="none"/>`);
+      if(M.random()>.5){
+        const ca=ba+(M.random()-.5)*.9, cl=bl*.5;
+        l.push(`<path d="M${bx},${by2} L${bx+M.cos(ca)*cl},${by2+M.sin(ca)*cl}" stroke="rgba(255,255,255,.15)" stroke-width=".3" fill="none"/>`);
+      }
+    }
+  }
+  o.innerHTML=`<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${l.join('')}</svg>`;
+  o.style.opacity='1';
+  setTimeout(()=>{o.style.transition='opacity .9s ease-out .2s'; o.style.opacity='0';},40);
+}
+
+// ── SPHERE DRAW ─────────────────────────────────────────
+function drawSphere(ctx,proj,t){
+  const S=256,cx=128,cy=128,r=116;
+  ctx.clearRect(0,0,S,S);
+  // deep base
+  const base=ctx.createRadialGradient(cx-28,cy-30,4,cx,cy,r);
+  base.addColorStop(0,'rgba(50,45,70,.6)');
+  base.addColorStop(.5,proj.color+'ee');
+  base.addColorStop(1,'#000');
+  ctx.fillStyle=base; ctx.beginPath(); ctx.arc(cx,cy,r,0,M.PI*2); ctx.fill();
+  // inner glow
+  const inner=ctx.createRadialGradient(cx,cy,8,cx,cy,r*.72);
+  inner.addColorStop(0,proj.accent+'3a');
+  inner.addColorStop(.6,proj.accent+'14');
+  inner.addColorStop(1,'transparent');
+  ctx.fillStyle=inner; ctx.beginPath(); ctx.arc(cx,cy,r*.9,0,M.PI*2); ctx.fill();
+  // fisheye rings
+  ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,r,0,M.PI*2); ctx.clip();
+  for(let i=1;i<=4;i++){
+    const fr=r*(i/4);
+    const fg=ctx.createRadialGradient(cx,cy,fr-1,cx,cy,fr+1);
+    fg.addColorStop(0,'transparent'); fg.addColorStop(.4,'transparent');
+    fg.addColorStop(.5,`rgba(255,255,255,${.035-.005*i})`);
+    fg.addColorStop(.6,'transparent'); fg.addColorStop(1,'transparent');
+    ctx.fillStyle=fg; ctx.fillRect(0,0,S,S);
+  }
+  ctx.restore();
+  // primary highlight
+  const hl1=ctx.createRadialGradient(cx-42,cy-46,1,cx-32,cy-36,r*.52);
+  hl1.addColorStop(0,'rgba(255,255,255,.78)'); hl1.addColorStop(.18,'rgba(255,255,255,.3)');
+  hl1.addColorStop(.5,'rgba(255,255,255,.05)'); hl1.addColorStop(1,'transparent');
+  ctx.fillStyle=hl1; ctx.beginPath(); ctx.arc(cx,cy,r,0,M.PI*2); ctx.fill();
+  // crisp specular dot
+  const hl2=ctx.createRadialGradient(cx-50,cy-52,0,cx-50,cy-52,16);
+  hl2.addColorStop(0,'rgba(255,255,255,.95)'); hl2.addColorStop(.5,'rgba(255,255,255,.3)');
+  hl2.addColorStop(1,'transparent');
+  ctx.fillStyle=hl2; ctx.beginPath(); ctx.arc(cx,cy,r,0,M.PI*2); ctx.fill();
+  // accent bounce
+  const hl3=ctx.createRadialGradient(cx+50,cy+52,0,cx+44,cy+46,r*.4);
+  hl3.addColorStop(0,proj.accent+'66'); hl3.addColorStop(.5,proj.accent+'1a');
+  hl3.addColorStop(1,'transparent');
+  ctx.fillStyle=hl3; ctx.beginPath(); ctx.arc(cx,cy,r,0,M.PI*2); ctx.fill();
+  // rim
+  const rim=ctx.createRadialGradient(cx,cy,r*.78,cx,cy,r);
+  rim.addColorStop(0,'transparent'); rim.addColorStop(.75,'transparent');
+  rim.addColorStop(1,'rgba(255,255,255,.25)');
+  ctx.fillStyle=rim; ctx.beginPath(); ctx.arc(cx,cy,r,0,M.PI*2); ctx.fill();
+  // shimmer
+  const fx=cx-20+M.sin(t*.8)*38, fy=cy-30+M.cos(t*.6)*22;
+  const fl=ctx.createRadialGradient(fx,fy,0,fx,fy,14);
+  fl.addColorStop(0,`rgba(255,255,255,${.14+M.sin(t*1.3)*.07})`);
+  fl.addColorStop(1,'transparent');
+  ctx.save(); ctx.beginPath(); ctx.arc(cx,cy,r,0,M.PI*2); ctx.clip();
+  ctx.fillStyle=fl; ctx.fillRect(0,0,S,S); ctx.restore();
+}
+
+// ── BUILD SPHERES ────────────────────────────────────────
+const track=document.getElementById('sphereTrack');
+const carW=document.getElementById('carouselWrapper');
+const projH2=document.getElementById('projH2');
+const sEls=[],sCvs=[],sCtx=[];
+
+for(let i=0;i<N;i++){
+  const el=document.createElement('div'); el.classList.add('sphere');
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=256;
+  const lb=document.createElement('div'); lb.classList.add('s-label'); lb.textContent=PROJECTS[i].title;
+  el.appendChild(cv); el.appendChild(lb);
+  track.appendChild(el);
+  sEls.push(el); sCvs.push(cv); sCtx.push(cv.getContext('2d'));
+}
+
+// ── CAROUSEL STATE ───────────────────────────────────────
+let angle=0, targetAngle=0, isDrag=false, dStartX=0, dStartA=0, dVel=0, dLast=0, dLastT=0;
+let frontIdx=-1;
+const TILT=M.PI/7, RX=300, RZ=220, BASE_SZ=108;
+
+function positionSpheres(){
+  const ww=carW.offsetWidth||window.innerWidth, wh=carW.offsetHeight||400;
+  const ccx=ww/2, ccy=wh/2;
+  let bestZ=-Infinity, bestI=0;
+  const data=[];
+  for(let i=0;i<N;i++){
+    const a=(i/N)*M.PI*2+angle;
+    const ox=M.sin(a)*RX, oz=M.cos(a)*RZ;
+    const ty=-oz*M.sin(TILT), tz=oz*M.cos(TILT);
+    const persp=700, scale=persp/(persp-tz);
+    data.push({sx:ccx+ox*scale, sy:ccy+ty*scale, sz:tz, scale, i});
+    if(tz>bestZ){bestZ=tz; bestI=i;}
+  }
+  data.sort((a,b)=>a.sz-b.sz);
+  let zi=1;
+  data.forEach(d=>{
+    const el=sEls[d.i], size=BASE_SZ*d.scale;
+    el.style.width=size+'px'; el.style.height=size+'px';
+    el.style.left=(d.sx-size/2)+'px'; el.style.top=(d.sy-size/2)+'px';
+    el.style.zIndex=zi++;
+    const t=(d.sz+RZ)/(2*RZ);
+    el.style.opacity=(.18+t*.82).toFixed(3);
+    el.classList.toggle('is-front',d.i===bestI);
+  });
+  if(bestI!==frontIdx){frontIdx=bestI; triggerBg(bestI);}
+}
+
+// ── TITLE PARALLAX ──────────────────────────────────────
+carW.addEventListener('mousemove',e=>{
+  const r=carW.getBoundingClientRect();
+  const dx=(e.clientX-r.left-r.width/2)/r.width*2, dy=(e.clientY-r.top-r.height/2)/r.height*2;
+  const bright=M.max(0,1-(M.abs(dx)+M.abs(dy))*.35);
+  projH2.style.webkitTextStroke=`1px rgba(255,255,255,${.22+bright*.5})`;
+  projH2.style.filter=bright>.6?`drop-shadow(0 0 32px rgba(255,255,255,${(bright-.6)*.22}))`:'none';
+});
+carW.addEventListener('mouseleave',()=>{projH2.style.webkitTextStroke='1px rgba(255,255,255,.3)'; projH2.style.filter='none';});
+
+// ── DRAG ────────────────────────────────────────────────
+carW.addEventListener('mousedown',e=>{isDrag=true;dStartX=e.clientX;dStartA=angle;dVel=0;dLast=e.clientX;dLastT=Date.now();e.preventDefault();});
+document.addEventListener('mousemove',e=>{if(!isDrag)return;angle=dStartA-(e.clientX-dStartX)*.006;targetAngle=angle;const now=Date.now();dVel=(e.clientX-dLast)/(now-dLastT+1)*14;dLast=e.clientX;dLastT=now;});
+document.addEventListener('mouseup',()=>{if(!isDrag)return;isDrag=false;targetAngle=angle-dVel*.06;});
+carW.addEventListener('touchstart',e=>{isDrag=true;dStartX=e.touches[0].clientX;dStartA=angle;dVel=0;dLast=e.touches[0].clientX;dLastT=Date.now();},{passive:true});
+carW.addEventListener('touchmove',e=>{if(!isDrag)return;angle=dStartA-(e.touches[0].clientX-dStartX)*.006;targetAngle=angle;const now=Date.now();dVel=(e.touches[0].clientX-dLast)/(now-dLastT+1)*14;dLast=e.touches[0].clientX;dLastT=now;},{passive:true});
+document.addEventListener('touchend',()=>{if(!isDrag)return;isDrag=false;targetAngle=angle-dVel*.06;});
+
+document.getElementById('proyectos').addEventListener('wheel',e=>{
+  const r=document.getElementById('proyectos').getBoundingClientRect();
+  if(r.top<window.innerHeight*.85&&r.bottom>window.innerHeight*.15){e.stopPropagation();targetAngle+=e.deltaY*.004;}
+},{passive:true});
+
+// ── BACKGROUND ──────────────────────────────────────────
+const bgDivs=[document.getElementById('vbg0'),document.getElementById('vbg1')];
+bgDivs.forEach(d=>{const cv=d.querySelector('canvas');d._cv=cv;d._ctx=cv.getContext('2d');d._proj=null;});
+let activeBg=0;
+function triggerBg(pi){
+  const next=1-activeBg;
+  bgDivs[next]._proj=PROJECTS[pi];
+  bgDivs[next].classList.add('active');
+  bgDivs[activeBg].classList.remove('active');
+  activeBg=next;
+}
+function drawBg(div,t){
+  if(!div._proj)return;
+  const cv=div._cv; cv.width=window.innerWidth; cv.height=window.innerHeight;
+  const w=cv.width,h=cv.height,ctx=div._ctx;
+  ctx.fillStyle=div._proj.color; ctx.fillRect(0,0,w,h);
+  for(let i=0;i<3;i++){
+    const x=w*.15+M.sin(t*.0007+i*2.1)*w*.42, y=h*.2+M.cos(t*.0005+i*1.9)*h*.38;
+    const g=ctx.createRadialGradient(x,y,0,x,y,w*.38);
+    g.addColorStop(0,div._proj.accent+'28'); g.addColorStop(1,'transparent');
+    ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+  }
+}
+
+// ── SPHERE CLICK → FRAGMENT + MODAL ─────────────────────
+sEls.forEach((el,i)=>el.addEventListener('click',()=>openProj(i,el)));
+
+function openProj(i,el){
+  const fc=document.getElementById('fragContainer'); fc.innerHTML='';
+  const r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2, sz=r.width;
+  const proj=PROJECTS[i];
+
+  // Big dramatic shards
+  for(let k=0;k<32;k++){
+    const p=document.createElement('div'); p.classList.add('frag-piece');
+    const ps=sz*.08+M.random()*sz*.4;
+    const a=M.random()*360, d=80+M.random()*280;
+    const shapes=['50%','0%',`${M.random()*30}% ${M.random()*30}%`];
+    p.style.cssText=`
+      width:${ps}px; height:${ps}px;
+      left:${cx-ps/2+(M.random()-.5)*sz*.8}px;
+      top:${cy-ps/2+(M.random()-.5)*sz*.8}px;
+      background:${proj.accent}22;
+      border:.5px solid ${proj.accent}66;
+      border-radius:${shapes[M.floor(M.random()*shapes.length)]};
+      --fd:${.5+M.random()*.55}s; --fdelay:${M.random()*.15}s;
+      --ftx:${M.cos(a*M.PI/180)*d}px; --fty:${M.sin(a*M.PI/180)*d-40}px;
+      --frot:${(M.random()-.5)*800}deg;
+    `;
+    fc.appendChild(p);
+  }
+  setTimeout(()=>fc.innerHTML='',1100);
+
+  // Modal
+  const modal=document.getElementById('modal');
+  const vWrap=document.getElementById('modalVideoWrap');
+  vWrap.innerHTML='';
+
+  if(proj.hasVideo && proj.video){
+    const vid=document.createElement('video');
+    vid.src=proj.video; vid.autoplay=true; vid.loop=true; vid.muted=true; vid.playsInline=true;
+    vid.style.cssText='width:100%;height:100%;object-fit:cover;display:block;';
+    vWrap.appendChild(vid);
+  } else {
+    // animated placeholder
+    const mc=document.createElement('canvas');
+    mc.style.cssText='width:100%;height:100%;display:block;';
+    vWrap.appendChild(mc);
+    let mt=0, raf=null;
+    function drawModal(){
+      if(!modal.classList.contains('open')){cancelAnimationFrame(raf);return;}
+      mc.width=mc.offsetWidth||900; mc.height=mc.offsetHeight||500;
+      const w=mc.width,h=mc.height,ctx=mc.getContext('2d');
+      ctx.fillStyle=proj.color; ctx.fillRect(0,0,w,h);
+      for(let j=0;j<4;j++){
+        const x=w*.1+M.sin(mt*.0009+j*1.8)*w*.44, y=h*.15+M.cos(mt*.0007+j*2.1)*h*.42;
+        const g=ctx.createRadialGradient(x,y,0,x,y,w*.42);
+        g.addColorStop(0,proj.accent+'50'); g.addColorStop(1,'transparent');
+        ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+      }
+      ctx.fillStyle='rgba(255,255,255,.04)';
+      ctx.font=`800 ${w*.08}px Syne,sans-serif`;
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      ctx.fillText(proj.title,w/2,h/2);
+      mt+=16; raf=requestAnimationFrame(drawModal);
+    }
+    drawModal();
+    modal._cleanup=()=>cancelAnimationFrame(raf);
+  }
+
+  document.getElementById('modalTag').textContent=proj.tag;
+  document.getElementById('modalTitle').textContent=proj.title;
+  document.getElementById('modalDesc').textContent=proj.desc;
+  modal.classList.add('open');
+}
+
+// Close on backdrop click
+document.getElementById('modal').addEventListener('click',e=>{
+  const inner=document.getElementById('modalInner');
+  if(!inner.contains(e.target)){
+    const modal=document.getElementById('modal');
+    modal.classList.remove('open');
+    const vid=document.querySelector('#modalVideoWrap video');
+    if(vid){vid.pause();}
+    if(modal._cleanup){modal._cleanup(); modal._cleanup=null;}
+  }
+});
+
+// ── MANIFESTO ───────────────────────────────────────────
+const LINES = [
+  { num:'01', text:'Dar <em>forma</em> al sonido del mundo.' },
+  { num:'02', text:'Lo abstracto tiene <em>geometría</em>.' },
+  { num:'03', text:'La energía quiere ser diseñada.' },
+  { num:'04', text:'Las palabras se quedan cortas para transmitir ideas.' },
+  { num:'05', text:'Todo puede ser traducido, lo que importa es <em>el lenguaje</em>.' },
+];
+const manifContainer = document.getElementById('manifestoLines');
+if(manifContainer){
+  LINES.forEach((l,i)=>{
+    const row = document.createElement('div');
+    row.classList.add('manif-line');
+    row.style.transitionDelay = `${i*0.12}s`;
+    row.innerHTML = `<span class="manif-num">${l.num}</span><span class="manif-text">${l.text}</span>`;
+    manifContainer.appendChild(row);
+  });
+}
+
+// Manifesto canvas — oscilloscope waveform
+const manifCv = document.getElementById('manifCanvas');
+if(manifCv){
+  const mCtx = manifCv.getContext('2d');
+  let mT = 0;
+  function drawManifBg(){
+    manifCv.width = manifCv.offsetWidth || window.innerWidth;
+    manifCv.height = manifCv.offsetHeight || window.innerHeight;
+    const w = manifCv.width, h = manifCv.height;
+    mCtx.clearRect(0,0,w,h);
+    // Draw 3 Lissajous-style sine curves
+    const curves = [
+      {a:1.5,b:2,c:'rgba(120,100,255,.12)',w:1.2},
+      {a:2,b:3,c:'rgba(40,200,150,.08)',w:0.8},
+      {a:3,b:5,c:'rgba(255,255,255,.05)',w:0.6},
+    ];
+    curves.forEach(curve=>{
+      mCtx.beginPath();
+      for(let x=0;x<w;x++){
+        const norm = x/w;
+        const y = h/2 + M.sin(norm*M.PI*curve.a*4+mT*0.6)*h*0.1
+                       + M.sin(norm*M.PI*curve.b*3+mT*0.4)*h*0.06;
+        x===0 ? mCtx.moveTo(x,y) : mCtx.lineTo(x,y);
+      }
+      mCtx.strokeStyle = curve.c;
+      mCtx.lineWidth = curve.w;
+      mCtx.stroke();
+    });
+    mT += 0.012;
+  }
+  function manifLoop(){
+    drawManifBg();
+    requestAnimationFrame(manifLoop);
+  }
+  manifLoop();
+}
+
+// Intersection observer to animate manifesto lines
+const manifObs = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      document.querySelectorAll('.manif-line').forEach(l=>l.classList.add('visible'));
+    }
+  });
+},{threshold:0.2});
+if(manifContainer) manifObs.observe(manifContainer);
+
+// ── LOGO: scroll to hero instead of reload ──────────────
+document.querySelector('.logo-wrap')?.addEventListener('click', e=>{
+  e.preventDefault();
+  goTo('hero');
+});
+
+// ── MAIN LOOP ────────────────────────────────────────────
+let lt=0, shimT=0;
+function loop(t){
+  requestAnimationFrame(loop);
+  const dt=M.min(t-lt,50); lt=t; shimT+=.00025*dt;
+  if(!isDrag) angle+=(targetAngle-angle)*.075;
+  positionSpheres();
+  for(let i=0;i<N;i++) drawSphere(sCtx[i],PROJECTS[i],shimT+i*.33);
+  bgDivs.forEach(d=>{if(d.classList.contains('active'))drawBg(d,t);});
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
