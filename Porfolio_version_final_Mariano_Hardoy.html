@@ -1411,6 +1411,21 @@ if(manifContainer){
   });
 }
 
+PROJECTS.forEach(proj => {
+
+  if(proj.type === 'video'){
+
+    const video = document.createElement('video');
+
+    video.src = proj.video;
+
+    video.preload = 'auto';
+
+    video.load();
+
+  }
+
+});
 // Manifesto canvas — oscilloscope waveform
 const manifCv = document.getElementById('manifCanvas');
 if(manifCv){
